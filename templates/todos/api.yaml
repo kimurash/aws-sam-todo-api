@@ -1,0 +1,67 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  TodoApp - API Gateway and Lambda Functions Stack (Todos domain).
+
+Parameters:
+  StageName:
+    Type: String
+    Description: The name of the API Gateway stage.
+  TodoTableName:
+    Type: String
+    Description: The name of the DynamoDB table for Todos.
+  TodoBucketName:
+    Type: String
+    Description: The name of the S3 bucket for images.
+
+Globals:
+  Function:
+    Timeout: 10
+    MemorySize: 256
+
+Resources:
+  TodoApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName:
+        Ref: StageName
+      Cors:
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        AllowOrigin: "'*'"
+
+  CreateTodoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../../resources/functions/todos
+      Handler: app.create_todo
+      Runtime: python3.13
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: TodoTableName
+          BUCKET_NAME:
+            Ref: TodoBucketName
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName:
+              Ref: TodoTableName
+        - S3CrudPolicy:
+            BucketName:
+              Ref: TodoBucketName
+      Events:
+        CreateTodo:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: TodoApi
+            Path: /todos
+            Method: post
+
+Outputs:
+  TodoApiUrl:
+    Description: "API Gateway endpoint URL for Todo API"
+    Value:
+      Fn::Sub: "https://${TodoApi}.execute-api.${AWS::Region}.amazonaws.com/${StageName}/"

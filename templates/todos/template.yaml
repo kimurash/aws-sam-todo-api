@@ -34,6 +34,30 @@ Resources:
         - Key: Environment
           Value: 
             Fn::Sub: "${AWS::StackName}"
+  
+  TodoApiStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: api.yaml
+      Parameters:
+        StageName:
+          Ref: StageName
+        TodoTableName:
+          Fn::GetAtt:
+            - TodoDatabaseStack
+            - Outputs.TodoTableName
+        TodoBucketName:
+          Fn::GetAtt:
+            - TodoStorageStack
+            - Outputs.TodoBucketName
+      Tags:
+        - Key: Project
+          Value: TodoAPI
+        - Key: Environment
+          Value: 
+            Fn::Sub: "${AWS::StackName}"
+        - Key: Domain
+          Value: Todos
 
 Outputs:
   TodoTableName:
@@ -48,3 +72,9 @@ Outputs:
       Fn::GetAtt:
         - TodoStorageStack
         - Outputs.TodoBucketName
+  TodoApiUrl:
+    Description: "API Gateway endpoint URL for Todo API"
+    Value:
+      Fn::GetAtt:
+        - TodoApiStack
+        - Outputs.TodoApiUrl

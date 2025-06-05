@@ -3,7 +3,7 @@ Description: >
   TodoAPI - S3 Storage Stack for images.
 
 Parameters:
-  BucketName:
+  TodoBucketName:
     Type: String
     Default: sam-todo-api-storage
     Description: The name of the S3 bucket for images.
@@ -13,7 +13,7 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName:
-        Ref: BucketName
+        Ref: TodoBucketName
       # バケット自体はプライベートにする
       # 署名付きURLなどでアクセスを制御する
       AccessControl: Private
@@ -36,6 +36,8 @@ Resources:
         - Key: Environment
           Value:
             Fn::Sub: "${AWS::StackName}"
+        - Key: Domain
+          Value: Todos
 
 Outputs:
   TodoBucketName:

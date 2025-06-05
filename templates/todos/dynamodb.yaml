@@ -27,6 +27,8 @@ Resources:
         - Key: Environment
           Value: 
             Fn::Sub: "${AWS::StackName}"
+        - Key: Domain
+          Value: Todos
 
 Outputs:
   TodoTableName:

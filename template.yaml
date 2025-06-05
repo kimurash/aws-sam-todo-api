@@ -37,3 +37,9 @@ Outputs:
       Fn::GetAtt:
         - TodosDomainStack
         - Outputs.TodoBucketName
+  TodoApiUrl:
+    Description: "API Gateway endpoint URL for Todo API"
+    Value:
+      Fn::GetAtt:
+        - TodosDomainStack
+        - Outputs.TodoApiUrl
