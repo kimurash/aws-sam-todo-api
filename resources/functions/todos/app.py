@@ -62,3 +62,53 @@ def create_todo(event, context):
             "headers": {"Content-Type": "application/json"},
             "body": json.dumps({"message": "Internal Server Error."}),
         }
+
+
+def get_todos(event, context):
+    try:
+        response = todo_table.scan()
+        return {
+            "statusCode": 200,
+            "headers": {"Content-Type": "application/json"},
+            "body": json.dumps(response["Items"]),
+        }
+    except Exception as e:
+        print(f"Error getting todos: {e}")
+        return {
+            "statusCode": 500,
+            "headers": {"Content-Type": "application/json"},
+            "body": json.dumps({"message": "Internal Server Error."}),
+        }
+
+
+def get_todo(event, context):
+    try:
+        todo_id = event.get("pathParameters", {}).get("todo_id")
+        if not todo_id:
+            return {
+                "statusCode": 400,
+                "headers": {"Content-Type": "application/json"},
+                "body": json.dumps(
+                    {"message": 'Validation Error: "todo_id" is required.'}
+                ),
+            }
+
+        response = todo_table.get_item(Key={"todo_id": todo_id})
+        if "Item" not in response:
+            return {
+                "statusCode": 404,
+                "headers": {"Content-Type": "application/json"},
+                "body": json.dumps({"message": "Todo not found."}),
+            }
+        return {
+            "statusCode": 200,
+            "headers": {"Content-Type": "application/json"},
+            "body": json.dumps(response["Item"]),
+        }
+    except Exception as e:
+        print(f"Error getting todo: {e}")
+        return {
+            "statusCode": 500,
+            "headers": {"Content-Type": "application/json"},
+            "body": json.dumps({"message": "Internal Server Error."}),
+        }

@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  TodoApp - API Gateway and Lambda Functions Stack (Todos domain).
+  TodoAPI - API Gateway and Lambda Functions Stack.
 
 Parameters:
   StageName:
@@ -59,6 +59,56 @@ Resources:
               Ref: TodoApi
             Path: /todos
             Method: post
+
+  GetTodosFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../../resources/functions/todos
+      Handler: app.get_todos
+      Runtime: python3.13
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: TodoTableName
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName:
+              Ref: TodoTableName
+      Events:
+        GetTodos:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: TodoApi
+            Path: /todos
+            Method: get
+
+  GetTodoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../../resources/functions/todos
+      Handler: app.get_todo
+      Runtime: python3.13
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: TodoTableName
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName:
+              Ref: TodoTableName
+      Events:
+        GetTodo:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: TodoApi
+            Path: /todos/{todo_id}
+            Method: get
 
 Outputs:
   TodoApiUrl:
