@@ -7,6 +7,6 @@ architecture = "x86_64"
 handler = "app.create_todo"
 manifest_hash = "8e9eb4ada10b031018d1c939871c0161"
 packagetype = "Zip"
-functions = ["TodosDomainStack/TodoApiStack/CreateTodoFunction", "TodosDomainStack/TodoApiStack/GetTodosFunction", "TodosDomainStack/TodoApiStack/GetTodoFunction", "TodosDomainStack/TodoApiStack/UpdateTodoFunction"]
+functions = ["TodosDomainStack/TodoApiStack/CreateTodoFunction", "TodosDomainStack/TodoApiStack/GetTodosFunction", "TodosDomainStack/TodoApiStack/GetTodoFunction", "TodosDomainStack/TodoApiStack/UpdateTodoFunction", "TodosDomainStack/TodoApiStack/DeleteTodoFunction"]
 
 [layer_build_definitions]

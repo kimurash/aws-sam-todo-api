@@ -165,3 +165,31 @@ def update_todo(event, context):
             "headers": {"Content-Type": "application/json"},
             "body": json.dumps({"message": "Internal Server Error."}),
         }
+
+
+def delete_todo(event, context):
+    try:
+        todo_id = event.get("pathParameters", {}).get("todo_id")
+        if not todo_id:
+            return {
+                "statusCode": 400,
+                "headers": {"Content-Type": "application/json"},
+                "body": json.dumps(
+                    {"message": 'Validation Error: "todo_id" is required.'}
+                ),
+            }
+
+        todo_table.delete_item(Key={"todo_id": todo_id})
+
+        return {
+            "statusCode": 204,
+            "headers": {"Content-Type": "application/json"},
+            "body": json.dumps({}),
+        }
+    except Exception as e:
+        print(f"Error deleting todo: {e}")
+        return {
+            "statusCode": 500,
+            "headers": {"Content-Type": "application/json"},
+            "body": json.dumps({"message": "Internal Server Error."}),
+        }

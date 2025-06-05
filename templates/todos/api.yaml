@@ -135,6 +135,31 @@ Resources:
             Path: /todos/{todo_id}
             Method: put
 
+  DeleteTodoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../../resources/functions/todos
+      Handler: app.delete_todo
+      Runtime: python3.13
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: TodoTableName
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName:
+              Ref: TodoTableName
+      Events:
+        DeleteTodo:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: TodoApi
+            Path: /todos/{todo_id}
+            Method: delete
+
 Outputs:
   TodoApiUrl:
     Description: "API Gateway endpoint URL for Todo API"
