@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  Todo API - Root Stack
+  Todo API - Todos Domain Stack.
 
 Parameters:
   StageName:
@@ -10,24 +10,24 @@ Parameters:
     Description: The name of the API Gateway stage to deploy.
 
 Resources:
-  TodosDomainStack:
+  TodosDatabaseStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: templates/todos/template.yaml
+      TemplateURL: dynamodb.yaml
       Parameters:
-        StageName:
-          Ref: StageName
+        TodoTableName:
+          Fn::Sub: "${AWS::StackName}-${StageName}-Todos"
       Tags:
         - Key: Project
           Value: TodoAPI
         - Key: Environment
           Value: 
-            Ref: StageName
+            Fn::Sub: "${AWS::StackName}"
 
 Outputs:
   TodoTableName:
     Description: "DynamoDB Table Name for Todos"
     Value:
       Fn::GetAtt:
-        - TodosDomainStack
+        - TodosDatabaseStack
         - Outputs.TodoTableName
