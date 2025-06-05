@@ -112,3 +112,56 @@ def get_todo(event, context):
             "headers": {"Content-Type": "application/json"},
             "body": json.dumps({"message": "Internal Server Error."}),
         }
+
+
+def update_todo(event, context):
+    try:
+        todo_id = event.get("pathParameters", {}).get("todo_id")
+        if not todo_id:
+            return {
+                "statusCode": 400,
+                "headers": {"Content-Type": "application/json"},
+                "body": json.dumps(
+                    {"message": 'Validation Error: "todo_id" is required.'}
+                ),
+            }
+
+        body = json.loads(event.get("body", "{}"))
+        if not body:
+            return {
+                "statusCode": 400,
+                "headers": {"Content-Type": "application/json"},
+                "body": json.dumps({"message": "No attributes to update."}),
+            }
+
+        old_todo = todo_table.get_item(Key={"todo_id": todo_id})
+        if "Item" not in old_todo:
+            return {
+                "statusCode": 404,
+                "headers": {"Content-Type": "application/json"},
+                "body": json.dumps({"message": "Todo not found."}),
+            }
+
+        new_todo = old_todo["Item"].copy()
+        new_todo.update(body)
+
+        todo_table.put_item(Item=new_todo)
+
+        return {
+            "statusCode": 200,
+            "headers": {"Content-Type": "application/json"},
+            "body": json.dumps(new_todo),
+        }
+    except json.JSONDecodeError:
+        return {
+            "statusCode": 400,
+            "headers": {"Content-Type": "application/json"},
+            "body": json.dumps({"message": "Invalid JSON in request body."}),
+        }
+    except Exception as e:
+        print(f"Error updating todo: {e}")
+        return {
+            "statusCode": 500,
+            "headers": {"Content-Type": "application/json"},
+            "body": json.dumps({"message": "Internal Server Error."}),
+        }
