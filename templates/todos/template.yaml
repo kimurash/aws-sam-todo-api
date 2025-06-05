@@ -10,7 +10,7 @@ Parameters:
     Description: The name of the API Gateway stage to deploy.
 
 Resources:
-  TodosDatabaseStack:
+  TodoDatabaseStack:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: dynamodb.yaml
@@ -24,10 +24,27 @@ Resources:
           Value: 
             Fn::Sub: "${AWS::StackName}"
 
+  TodoStorageStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: s3.yaml
+      Tags:
+        - Key: Project
+          Value: TodoAPI
+        - Key: Environment
+          Value: 
+            Fn::Sub: "${AWS::StackName}"
+
 Outputs:
   TodoTableName:
     Description: "DynamoDB Table Name for Todos"
     Value:
       Fn::GetAtt:
-        - TodosDatabaseStack
+        - TodoDatabaseStack
         - Outputs.TodoTableName
+  TodoBucketName:
+    Description: "S3 Bucket Name for Images"
+    Value:
+      Fn::GetAtt:
+        - TodoStorageStack
+        - Outputs.TodoBucketName

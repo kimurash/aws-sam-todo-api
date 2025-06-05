@@ -31,3 +31,9 @@ Outputs:
       Fn::GetAtt:
         - TodosDomainStack
         - Outputs.TodoTableName
+  TodoBucketName:
+    Description: "S3 Bucket Name for Images"
+    Value:
+      Fn::GetAtt:
+        - TodosDomainStack
+        - Outputs.TodoBucketName

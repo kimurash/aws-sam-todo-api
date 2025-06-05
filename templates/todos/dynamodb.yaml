@@ -9,7 +9,7 @@ Parameters:
     Description: The name of the DynamoDB table for Todos.
 
 Resources:
-  TodosTable:
+  TodoTable:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: 
@@ -32,4 +32,4 @@ Outputs:
   TodoTableName:
     Description: "Name of the DynamoDB table for Todos"
     Value: 
-      Ref: TodosTable
+      Ref: TodoTable
