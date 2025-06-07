@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  TodoAPI - Image Lambda Stack.
+
+Parameters:
+  ImageBucketName:
+    Type: String
+    Description: The name of the S3 bucket for images.
+  ApiId:
+    Type: String
+    Description: The ID of the shared API Gateway
+
+Globals:
+  Function:
+    Timeout: 10
+    MemorySize: 256
+
+Resources:
+  GenerateUploadUrlFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: GenerateUploadUrlFunction
+      CodeUri: ../../resources/functions/images/
+      Handler: app.generate_upload_url
+      Runtime: python3.13
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          BUCKET_NAME:
+            Ref: ImageBucketName
+      Policies:
+        - S3CrudPolicy:
+            BucketName:
+              Ref: ImageBucketName
+
+  GenerateUploadUrlPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Fn::GetAtt:
+          - GenerateUploadUrlFunction
+          - Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub: arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiId}/*/GET/images/presigned-url

@@ -8,38 +8,120 @@ Parameters:
     Type: String
     Default: dev
     Description: The name of the API Gateway stage to deploy.
+  TodoTableName:
+    Type: String
+    Default: todos
+    Description: The name of the DynamoDB table for Todos.
+  ImageBucketName:
+    Type: String
+    Default: todo-api-image-storage
+    Description: The name of the S3 bucket for image.
 
 Resources:
-  TodosDomainStack:
-    Type: AWS::CloudFormation::Stack
+  ApiStack:
+    Type: AWS::Serverless::Api
     Properties:
-      TemplateURL: templates/todos/template.yaml
+      Name: todo-api
+      StageName:
+        Ref: StageName
+      DefinitionBody:
+        openapi: 3.0.1
+        info:
+          title: todo-api
+          version: "1.0.0"
+        paths:
+          /todos:
+            get:
+              x-amazon-apigateway-integration:
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GetTodosFunction/invocations
+                httpMethod: POST
+                type: aws_proxy
+            post:
+              x-amazon-apigateway-integration:
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CreateTodoFunction/invocations
+                httpMethod: POST
+                type: aws_proxy
+          /todos/{todo_id}:
+            get:
+              x-amazon-apigateway-integration:
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GetTodoFunction/invocations
+                httpMethod: POST
+                type: aws_proxy
+            put:
+              x-amazon-apigateway-integration:
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:UpdateTodoFunction/invocations
+                httpMethod: POST
+                type: aws_proxy
+            delete:
+              x-amazon-apigateway-integration:
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:DeleteTodoFunction/invocations
+                httpMethod: POST
+                type: aws_proxy
+          /images/presigned-url:
+            get:
+              x-amazon-apigateway-integration:
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GenerateUploadUrlFunction/invocations
+                httpMethod: POST
+                type: aws_proxy
+
+  TodoLambdaStack:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: templates/todos/lambda.yaml
       Parameters:
-        StageName:
-          Ref: StageName
-      Tags:
-        - Key: Project
-          Value: TodoAPI
-        - Key: Environment
-          Value: 
-            Ref: StageName
+        ApiId:
+          Ref: ApiStack
+        TodoTableName:
+          Ref: TodoTableName
+
+  TodoTableStack:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: templates/todos/dynamodb.yaml
+      Parameters:
+        TodoTableName:
+          Ref: TodoTableName
+
+  ImageLambdaStack:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: templates/images/lambda.yaml
+      Parameters:
+        ApiId:
+          Ref: ApiStack
+        ImageBucketName:
+          Ref: ImageBucketName
+
+  ImageBucketStack:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: templates/images/s3.yaml
+      Parameters:
+        ImageBucketName:
+          Ref: ImageBucketName
 
 Outputs:
+  ApiUrl:
+    Description: "API Gateway endpoint URL"
+    Value:
+      Fn::Sub: "https://${ApiStack}.execute-api.${AWS::Region}.amazonaws.com/${StageName}"
+
   TodoTableName:
     Description: "DynamoDB Table Name for Todos"
     Value:
       Fn::GetAtt:
-        - TodosDomainStack
+        - TodoTableStack
         - Outputs.TodoTableName
-  TodoBucketName:
+
+  ImageBucketName:
     Description: "S3 Bucket Name for Images"
     Value:
       Fn::GetAtt:
-        - TodosDomainStack
-        - Outputs.TodoBucketName
-  TodoApiUrl:
-    Description: "API Gateway endpoint URL for Todo API"
-    Value:
-      Fn::GetAtt:
-        - TodosDomainStack
-        - Outputs.TodoApiUrl
+        - ImageBucketStack
+        - Outputs.ImageBucketName

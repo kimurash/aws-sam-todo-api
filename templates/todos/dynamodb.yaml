@@ -5,7 +5,6 @@ Description: >
 Parameters:
   TodoTableName:
     Type: String
-    Default: todos
     Description: The name of the DynamoDB table for Todos.
 
 Resources:

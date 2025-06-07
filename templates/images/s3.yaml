@@ -1,19 +1,18 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
-  TodoAPI - S3 Storage Stack for images.
+  TodoAPI - S3 Storage Stack for image.
 
 Parameters:
-  TodoBucketName:
+  ImageBucketName:
     Type: String
-    Default: sam-todo-api-storage
-    Description: The name of the S3 bucket for images.
+    Description: The name of the S3 bucket for image.
 
 Resources:
-  TodoBucket:
+  ImageBucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName:
-        Ref: TodoBucketName
+        Ref: ImageBucketName
       # バケット自体はプライベートにする
       # 署名付きURLなどでアクセスを制御する
       AccessControl: Private
@@ -28,7 +27,7 @@ Resources:
               - DELETE
             AllowedOrigins:
               # 開発中は全てのオリジンを許可してもいいが、
-              # 本番ではフロントエンドのドメインに限定するべきです
+              # 本番ではフロントエンドのドメインに限定するべき
               - "*"
       Tags:
         - Key: Project
@@ -37,10 +36,10 @@ Resources:
           Value:
             Fn::Sub: "${AWS::StackName}"
         - Key: Domain
-          Value: Todos
+          Value: Image
 
 Outputs:
-  TodoBucketName:
-    Description: "Name of the S3 bucket for images"
+  ImageBucketName:
+    Description: "Name of the S3 bucket for image"
     Value:
-      Ref: TodoBucket
+      Ref: ImageBucket

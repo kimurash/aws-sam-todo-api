@@ -1,17 +1,17 @@
 import json
 import os
+from typing import Any
 import uuid
 
 import boto3
 
 TABLE_NAME = os.environ.get("TABLE_NAME")
-BUCKET_NAME = os.environ.get("BUCKET_NAME")
 
-dynamodb = boto3.resource("dynamodb")
+dynamodb = boto3.resource("dynamodb", region_name="ap-northeast-1")
 todo_table = dynamodb.Table(TABLE_NAME)
 
 
-def create_todo(event, context):
+def create_todo(event: dict, context: Any):
     try:
         body = json.loads(event.get("body", "{}"))
 
@@ -20,9 +20,7 @@ def create_todo(event, context):
             return {
                 "statusCode": 400,
                 "headers": {"Content-Type": "application/json"},
-                "body": json.dumps(
-                    {"message": 'Validation Error: "title" is required.'}
-                ),
+                "body": json.dumps({"message": '"title" は必須項目です'}),
             }
 
         completed = bool(body.get("completed", False))
@@ -53,18 +51,18 @@ def create_todo(event, context):
         return {
             "statusCode": 400,
             "headers": {"Content-Type": "application/json"},
-            "body": json.dumps({"message": "Invalid JSON in request body."}),
+            "body": json.dumps({"message": "リクエストボディのデコードに失敗しました"}),
         }
     except Exception as e:
         print(f"Error creating todo: {e}")
         return {
             "statusCode": 500,
             "headers": {"Content-Type": "application/json"},
-            "body": json.dumps({"message": "Internal Server Error."}),
+            "body": json.dumps({"message": "サーバーの内部でエラーが発生しました"}),
         }
 
 
-def get_todos(event, context):
+def get_todos(event: dict, context: Any) -> dict:
     try:
         response = todo_table.scan()
         return {
@@ -77,20 +75,18 @@ def get_todos(event, context):
         return {
             "statusCode": 500,
             "headers": {"Content-Type": "application/json"},
-            "body": json.dumps({"message": "Internal Server Error."}),
+            "body": json.dumps({"message": "サーバーの内部でエラーが発生しました"}),
         }
 
 
-def get_todo(event, context):
+def get_todo(event: dict, context: Any) -> dict:
     try:
         todo_id = event.get("pathParameters", {}).get("todo_id")
         if not todo_id:
             return {
                 "statusCode": 400,
                 "headers": {"Content-Type": "application/json"},
-                "body": json.dumps(
-                    {"message": 'Validation Error: "todo_id" is required.'}
-                ),
+                "body": json.dumps({"message": '"todo_id" は必須項目です'}),
             }
 
         response = todo_table.get_item(Key={"todo_id": todo_id})
@@ -98,7 +94,7 @@ def get_todo(event, context):
             return {
                 "statusCode": 404,
                 "headers": {"Content-Type": "application/json"},
-                "body": json.dumps({"message": "Todo not found."}),
+                "body": json.dumps({"message": "Todoが見つかりませんでした"}),
             }
         return {
             "statusCode": 200,
@@ -110,20 +106,18 @@ def get_todo(event, context):
         return {
             "statusCode": 500,
             "headers": {"Content-Type": "application/json"},
-            "body": json.dumps({"message": "Internal Server Error."}),
+            "body": json.dumps({"message": "サーバーの内部でエラーが発生しました"}),
         }
 
 
-def update_todo(event, context):
+def update_todo(event: dict, context: Any) -> dict:
     try:
         todo_id = event.get("pathParameters", {}).get("todo_id")
         if not todo_id:
             return {
                 "statusCode": 400,
                 "headers": {"Content-Type": "application/json"},
-                "body": json.dumps(
-                    {"message": 'Validation Error: "todo_id" is required.'}
-                ),
+                "body": json.dumps({"message": '"todo_id" は必須項目です'}),
             }
 
         body = json.loads(event.get("body", "{}"))
@@ -131,7 +125,7 @@ def update_todo(event, context):
             return {
                 "statusCode": 400,
                 "headers": {"Content-Type": "application/json"},
-                "body": json.dumps({"message": "No attributes to update."}),
+                "body": json.dumps({"message": "更新する属性が指定されていません"}),
             }
 
         old_todo = todo_table.get_item(Key={"todo_id": todo_id})
@@ -139,7 +133,7 @@ def update_todo(event, context):
             return {
                 "statusCode": 404,
                 "headers": {"Content-Type": "application/json"},
-                "body": json.dumps({"message": "Todo not found."}),
+                "body": json.dumps({"message": "Todoが見つかりませんでした"}),
             }
 
         new_todo = old_todo["Item"].copy()
@@ -156,27 +150,25 @@ def update_todo(event, context):
         return {
             "statusCode": 400,
             "headers": {"Content-Type": "application/json"},
-            "body": json.dumps({"message": "Invalid JSON in request body."}),
+            "body": json.dumps({"message": "リクエストボディのデコードに失敗しました"}),
         }
     except Exception as e:
         print(f"Error updating todo: {e}")
         return {
             "statusCode": 500,
             "headers": {"Content-Type": "application/json"},
-            "body": json.dumps({"message": "Internal Server Error."}),
+            "body": json.dumps({"message": "サーバーの内部でエラーが発生しました"}),
         }
 
 
-def delete_todo(event, context):
+def delete_todo(event: dict, context: Any) -> dict:
     try:
         todo_id = event.get("pathParameters", {}).get("todo_id")
         if not todo_id:
             return {
                 "statusCode": 400,
                 "headers": {"Content-Type": "application/json"},
-                "body": json.dumps(
-                    {"message": 'Validation Error: "todo_id" is required.'}
-                ),
+                "body": json.dumps({"message": '"todo_id" は必須項目です'}),
             }
 
         todo_table.delete_item(Key={"todo_id": todo_id})
@@ -191,5 +183,5 @@ def delete_todo(event, context):
         return {
             "statusCode": 500,
             "headers": {"Content-Type": "application/json"},
-            "body": json.dumps({"message": "Internal Server Error."}),
+            "body": json.dumps({"message": "サーバーの内部でエラーが発生しました"}),
         }

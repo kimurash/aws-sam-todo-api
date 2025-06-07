@@ -4,15 +4,12 @@ Description: >
   TodoAPI - API Gateway and Lambda Functions Stack.
 
 Parameters:
-  StageName:
+  ApiId:
     Type: String
-    Description: The name of the API Gateway stage.
+    Description: The ID of the shared API Gateway
   TodoTableName:
     Type: String
     Description: The name of the DynamoDB table for Todos.
-  TodoBucketName:
-    Type: String
-    Description: The name of the S3 bucket for images.
 
 Globals:
   Function:
@@ -20,19 +17,10 @@ Globals:
     MemorySize: 256
 
 Resources:
-  TodoApi:
-    Type: AWS::Serverless::Api
-    Properties:
-      StageName:
-        Ref: StageName
-      Cors:
-        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
-        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-        AllowOrigin: "'*'"
-
   CreateTodoFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: CreateTodoFunction
       CodeUri: ../../resources/functions/todos
       Handler: app.create_todo
       Runtime: python3.13
@@ -42,27 +30,27 @@ Resources:
         Variables:
           TABLE_NAME:
             Ref: TodoTableName
-          BUCKET_NAME:
-            Ref: TodoBucketName
       Policies:
         - DynamoDBCrudPolicy:
             TableName:
               Ref: TodoTableName
-        - S3CrudPolicy:
-            BucketName:
-              Ref: TodoBucketName
-      Events:
-        CreateTodo:
-          Type: Api
-          Properties:
-            RestApiId:
-              Ref: TodoApi
-            Path: /todos
-            Method: post
+
+  CreateTodoPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Fn::GetAtt:
+          - CreateTodoFunction
+          - Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub: arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiId}/*/POST/todos
 
   GetTodosFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: GetTodosFunction
       CodeUri: ../../resources/functions/todos
       Handler: app.get_todos
       Runtime: python3.13
@@ -76,18 +64,23 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName:
               Ref: TodoTableName
-      Events:
-        GetTodos:
-          Type: Api
-          Properties:
-            RestApiId:
-              Ref: TodoApi
-            Path: /todos
-            Method: get
+
+  GetTodosPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Fn::GetAtt:
+          - GetTodosFunction
+          - Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub: arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiId}/*/GET/todos
 
   GetTodoFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: GetTodoFunction
       CodeUri: ../../resources/functions/todos
       Handler: app.get_todo
       Runtime: python3.13
@@ -101,18 +94,23 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName:
               Ref: TodoTableName
-      Events:
-        GetTodo:
-          Type: Api
-          Properties:
-            RestApiId:
-              Ref: TodoApi
-            Path: /todos/{todo_id}
-            Method: get
+
+  GetTodoPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Fn::GetAtt:
+          - GetTodoFunction
+          - Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub: arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiId}/*/GET/todos/{todo_id}
 
   UpdateTodoFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: UpdateTodoFunction
       CodeUri: ../../resources/functions/todos
       Handler: app.update_todo
       Runtime: python3.13
@@ -126,18 +124,23 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName:
               Ref: TodoTableName
-      Events:
-        UpdateTodo:
-          Type: Api
-          Properties:
-            RestApiId:
-              Ref: TodoApi
-            Path: /todos/{todo_id}
-            Method: put
+
+  UpdateTodoPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Fn::GetAtt:
+          - UpdateTodoFunction
+          - Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub: arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiId}/*/PUT/todos/{todo_id}
 
   DeleteTodoFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: DeleteTodoFunction
       CodeUri: ../../resources/functions/todos
       Handler: app.delete_todo
       Runtime: python3.13
@@ -151,17 +154,15 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName:
               Ref: TodoTableName
-      Events:
-        DeleteTodo:
-          Type: Api
-          Properties:
-            RestApiId:
-              Ref: TodoApi
-            Path: /todos/{todo_id}
-            Method: delete
 
-Outputs:
-  TodoApiUrl:
-    Description: "API Gateway endpoint URL for Todo API"
-    Value:
-      Fn::Sub: "https://${TodoApi}.execute-api.${AWS::Region}.amazonaws.com/${StageName}/"
+  DeleteTodoPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Fn::GetAtt:
+          - DeleteTodoFunction
+          - Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub: arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiId}/*/DELETE/todos/{todo_id}
