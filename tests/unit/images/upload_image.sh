@@ -1,6 +1,6 @@
 #!/bin/bash
 
-endpoint="https://309fcajnr1.execute-api.ap-northeast-1.amazonaws.com/dev"
+endpoint="https://xd77j469t6.execute-api.ap-northeast-1.amazonaws.com/dev"
 
 presigned_url=$(curl -s "$endpoint/images/presigned-url?format=png" | jq -r '.uploadUrl')
 

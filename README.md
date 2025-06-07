@@ -4,7 +4,6 @@ This project contains source code and supporting files for a serverless applicat
 
 - resources - AWS resources.
 - templates - AWS SAM templates.
-- functions - Lambda functions.
 - events - Invocation events that you can use to invoke the function.
 - tests - Unit tests for the application code. 
 

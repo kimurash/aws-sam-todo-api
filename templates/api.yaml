@@ -1,0 +1,206 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Todo API - API Stack
+
+Parameters:
+  StageName:
+    Type: String
+    Description: The name of the API Gateway stage to deploy.
+  TodoTableName:
+    Type: String
+    Description: The name of the DynamoDB table for Todos.
+  ImageBucketName:
+    Type: String
+    Description: The name of the S3 bucket for image.
+
+Globals:
+  Function:
+    Timeout: 10
+    MemorySize: 256
+
+Resources:
+  TodoApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: todo-api
+      StageName:
+        Ref: StageName
+      Cors:
+        AllowOrigin: "'*'"
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+        AllowHeaders: "'*'"
+
+  CreateTodoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: CreateTodoFunction
+      CodeUri: ../resources/functions/todos
+      Handler: app.create_todo
+      Runtime: python3.13
+      Architectures:
+        - x86_64
+      Events:
+        CreateTodo:
+          Type: Api
+          Properties:
+            Path: /todos
+            Method: POST
+            RestApiId:
+              Ref: TodoApi
+          DependsOn:
+            - TodoApi
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: TodoTableName
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName:
+              Ref: TodoTableName
+
+  GetTodosFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: GetTodosFunction
+      CodeUri: ../resources/functions/todos
+      Handler: app.get_todos
+      Runtime: python3.13
+      Architectures:
+        - x86_64
+      Events:
+        GetTodos:
+          Type: Api
+          Properties:
+            Path: /todos
+            Method: GET
+            RestApiId:
+              Ref: TodoApi
+          DependsOn:
+            - TodoApi
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: TodoTableName
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName:
+              Ref: TodoTableName
+
+  GetTodoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: GetTodoFunction
+      CodeUri: ../resources/functions/todos
+      Handler: app.get_todo
+      Runtime: python3.13
+      Architectures:
+        - x86_64
+      Events:
+        GetTodo:
+          Type: Api
+          Properties:
+            Path: /todos/{todo_id}
+            Method: GET
+            RestApiId:
+              Ref: TodoApi
+          DependsOn:
+            - TodoApi
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: TodoTableName
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName:
+              Ref: TodoTableName
+
+  UpdateTodoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: UpdateTodoFunction
+      CodeUri: ../resources/functions/todos
+      Handler: app.update_todo
+      Runtime: python3.13
+      Architectures:
+        - x86_64
+      Events:
+        UpdateTodo:
+          Type: Api
+          Properties:
+            Path: /todos/{todo_id}
+            Method: PUT
+            RestApiId:
+              Ref: TodoApi
+          DependsOn:
+            - TodoApi
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: TodoTableName
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName:
+              Ref: TodoTableName
+
+  DeleteTodoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DeleteTodoFunction
+      CodeUri: ../resources/functions/todos
+      Handler: app.delete_todo
+      Runtime: python3.13
+      Architectures:
+        - x86_64
+      Events:
+        DeleteTodo:
+          Type: Api
+          Properties:
+            Path: /todos/{todo_id}
+            Method: DELETE
+            RestApiId:
+              Ref: TodoApi
+          DependsOn:
+            - TodoApi
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: TodoTableName
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName:
+              Ref: TodoTableName
+
+  GenerateUploadUrlFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: GenerateUploadUrlFunction
+      CodeUri: ../resources/functions/images/
+      Handler: app.generate_upload_url
+      Runtime: python3.13
+      Architectures:
+        - x86_64
+      Events:
+        GenerateUploadUrl:
+          Type: Api
+          Properties:
+            Path: /images/presigned-url
+            Method: GET
+            RestApiId:
+              Ref: TodoApi
+          DependsOn:
+            - TodoApi
+      Environment:
+        Variables:
+          BUCKET_NAME:
+            Ref: ImageBucketName
+      Policies:
+        - S3CrudPolicy:
+            BucketName:
+              Ref: ImageBucketName
+
+Outputs:
+  TodoApiUrl:
+    Description: "API Gateway endpoint URL"
+    Value:
+      Fn::Sub: "https://${TodoApi}.execute-api.${AWS::Region}.amazonaws.com/${StageName}"

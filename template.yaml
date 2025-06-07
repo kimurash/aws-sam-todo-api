@@ -18,99 +18,41 @@ Parameters:
     Description: The name of the S3 bucket for image.
 
 Resources:
-  ApiStack:
-    Type: AWS::Serverless::Api
-    Properties:
-      Name: todo-api
-      StageName:
-        Ref: StageName
-      DefinitionBody:
-        openapi: 3.0.1
-        info:
-          title: todo-api
-          version: "1.0.0"
-        paths:
-          /todos:
-            get:
-              x-amazon-apigateway-integration:
-                uri:
-                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GetTodosFunction/invocations
-                httpMethod: POST
-                type: aws_proxy
-            post:
-              x-amazon-apigateway-integration:
-                uri:
-                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:CreateTodoFunction/invocations
-                httpMethod: POST
-                type: aws_proxy
-          /todos/{todo_id}:
-            get:
-              x-amazon-apigateway-integration:
-                uri:
-                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GetTodoFunction/invocations
-                httpMethod: POST
-                type: aws_proxy
-            put:
-              x-amazon-apigateway-integration:
-                uri:
-                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:UpdateTodoFunction/invocations
-                httpMethod: POST
-                type: aws_proxy
-            delete:
-              x-amazon-apigateway-integration:
-                uri:
-                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:DeleteTodoFunction/invocations
-                httpMethod: POST
-                type: aws_proxy
-          /images/presigned-url:
-            get:
-              x-amazon-apigateway-integration:
-                uri:
-                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:GenerateUploadUrlFunction/invocations
-                httpMethod: POST
-                type: aws_proxy
-
-  TodoLambdaStack:
+  TodoApiStack:
     Type: AWS::Serverless::Application
     Properties:
-      Location: templates/todos/lambda.yaml
+      Location: templates/api.yaml
       Parameters:
-        ApiId:
-          Ref: ApiStack
+        StageName:
+          Ref: StageName
         TodoTableName:
           Ref: TodoTableName
+        ImageBucketName:
+          Ref: ImageBucketName
 
   TodoTableStack:
     Type: AWS::Serverless::Application
     Properties:
-      Location: templates/todos/dynamodb.yaml
+      Location: templates/dynamodb.yaml
       Parameters:
         TodoTableName:
           Ref: TodoTableName
 
-  ImageLambdaStack:
-    Type: AWS::Serverless::Application
-    Properties:
-      Location: templates/images/lambda.yaml
-      Parameters:
-        ApiId:
-          Ref: ApiStack
-        ImageBucketName:
-          Ref: ImageBucketName
-
   ImageBucketStack:
     Type: AWS::Serverless::Application
     Properties:
-      Location: templates/images/s3.yaml
+      Location: templates/s3.yaml
       Parameters:
         ImageBucketName:
           Ref: ImageBucketName
 
 Outputs:
-  ApiUrl:
+  TodoApiUrl:
     Description: "API Gateway endpoint URL"
     Value:
-      Fn::Sub: "https://${ApiStack}.execute-api.${AWS::Region}.amazonaws.com/${StageName}"
+      Fn::GetAtt:
+        - TodoApiStack
+        - Outputs.TodoApiUrl
 
   TodoTableName:
     Description: "DynamoDB Table Name for Todos"
