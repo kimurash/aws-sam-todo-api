@@ -19,9 +19,9 @@ Parameters:
 
 Resources:
   TodoApiStack:
-    Type: AWS::CloudFormation::Stack
+    Type: AWS::Serverless::Application
     Properties:
-      TemplateURL: templates/api.yaml
+      Location: templates/api.yaml
       Parameters:
         StageName:
           Ref: StageName
@@ -31,9 +31,9 @@ Resources:
           Ref: ImageBucketName
 
   TodoTableStack:
-    Type: AWS::CloudFormation::Stack
+    Type: AWS::Serverless::Application
     Properties:
-      TemplateURL: templates/dynamodb.yaml
+      Location: templates/dynamodb.yaml
       Parameters:
         TodoTableName:
           Ref: TodoTableName
