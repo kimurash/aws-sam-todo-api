@@ -1,13 +1,18 @@
 import json
 import os
-from typing import Any
 import uuid
+from typing import Any
 
 import boto3
 
-TABLE_NAME = os.environ.get("TABLE_NAME")
+TABLE_NAME = os.getenv("TABLE_NAME")
+DYNAMODB_ENDPOINT = os.getenv("DYNAMODB_ENDPOINT")
 
-dynamodb = boto3.resource("dynamodb", region_name="ap-northeast-1")
+dynamodb = boto3.resource(
+    "dynamodb",
+    region_name="ap-northeast-1",
+    endpoint_url=DYNAMODB_ENDPOINT,
+)
 todo_table = dynamodb.Table(TABLE_NAME)
 
 
@@ -139,7 +144,18 @@ def update_todo(event: dict, context: Any) -> dict:
         new_todo = old_todo["Item"].copy()
         new_todo.update(body)
 
-        todo_table.put_item(Item=new_todo)
+        todo_table.update_item(
+            Key={"todo_id": todo_id},
+            UpdateExpression="set #title = :title, #completed = :completed",
+            ExpressionAttributeNames={
+                "#title": "title",
+                "#completed": "completed",
+            },
+            ExpressionAttributeValues={
+                ":title": new_todo["title"],
+                ":completed": new_todo["completed"],
+            },
+        )
 
         return {
             "statusCode": 200,
@@ -175,8 +191,6 @@ def delete_todo(event: dict, context: Any) -> dict:
 
         return {
             "statusCode": 204,
-            "headers": {"Content-Type": "application/json"},
-            "body": json.dumps({}),
         }
     except Exception as e:
         print(f"Error deleting todo: {e}")

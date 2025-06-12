@@ -1,12 +1,12 @@
 import json
 import os
-from typing import Any
 import uuid
+from typing import Any
 
 import boto3
 
 s3 = boto3.client("s3", region_name="ap-northeast-1")
-BUCKET_NAME = os.environ["BUCKET_NAME"]
+BUCKET_NAME = os.getenv("BUCKET_NAME")
 
 
 def generate_upload_url(event: dict, context: Any) -> dict:
