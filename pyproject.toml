@@ -11,6 +11,9 @@ dependencies = [
 [dependency-groups]
 dev = [
     "boto3-stubs[essential]>=1.38.30",
+    "faker>=37.4.0",
+    "inquirer>=3.4.0",
     "moto[all]>=5.1.5",
     "pytest>=8.4.0",
+    "requests>=2.32.3",
 ]
